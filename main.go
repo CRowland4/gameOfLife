@@ -10,11 +10,79 @@ type cell struct {
 }
 
 func main() {
-	gridSize, seed := getStart()
+	gridSize, seed, iterations := getStart()
 	rand.Seed(int64(seed))
 
 	grid := createGrid(gridSize)
+	for i := 0; i < iterations; i++ {
+		grid = iterateGrid(grid)
+	}
+
 	printGrid(grid)
+	return
+}
+
+func iterateGrid(grid [][]cell) (newGrid [][]cell) {
+	for r, row := range grid {
+		newGrid = append(newGrid, []cell{})
+		for c, oldCell := range row {
+			neighborCoordinates := getCellNeighborsCoordinates(r, c, len(grid)-1)
+			newState := getNewCellState(grid, oldCell, neighborCoordinates)
+			newGrid[r] = append(newGrid[r], cell{state: newState})
+		}
+	}
+
+	return newGrid
+}
+
+func getNewCellState(grid [][]cell, oldCell cell, neighborCoordinates [8][2]int) (state int) {
+	var liveNeighbors int
+	for _, neighbor := range neighborCoordinates {
+		row, col := neighbor[0], neighbor[1]
+		liveNeighbors += grid[row][col].state
+	}
+
+	if (oldCell.state == 0) && (liveNeighbors == 3) {
+		return 1
+	}
+	if (oldCell.state == 0) && (liveNeighbors != 3) {
+		return 0
+	}
+	if (oldCell.state == 1) && (liveNeighbors == 2 || liveNeighbors == 3) {
+		return 1
+	}
+
+	return 0
+
+}
+
+func getCellNeighborsCoordinates(row, column, maxIndex int) (neighbors [8][2]int) {
+	if row == 0 && column == 0 {
+		return neighborsCornerTL(maxIndex)
+	}
+	if row == 0 && column == maxIndex {
+		return neighborsCornerTR(maxIndex)
+	}
+	if row == maxIndex && column == maxIndex {
+		return neighborsCornerBR(maxIndex)
+	}
+	if row == maxIndex && column == 0 {
+		return neighborsCornerBL(maxIndex)
+	}
+	if row == 0 {
+		return neighborsEdgeT(row, column, maxIndex)
+	}
+	if column == maxIndex {
+		return neighborsEdgeR(row, column)
+	}
+	if row == maxIndex {
+		return neighborsEdgeB(row, column)
+	}
+	if column == 0 { // Left edge, not corner
+		return neighborsEdgeL(row, column, maxIndex)
+	}
+
+	return neighborsCenter(row, column)
 }
 
 func printGrid(grid [][]cell) {
@@ -40,9 +108,126 @@ func createGrid(gridSize int) (grid [][]cell) {
 	return grid
 }
 
-func getStart() (gridSize, seed int) {
-	fmt.Scanf("%d %d", &gridSize, &seed)
+func getStart() (gridSize, seed, iterations int) {
+	fmt.Scanf("%d %d %d", &gridSize, &seed, &iterations)
 	// fmt.Scanln() to consume whitespace
 
-	return gridSize, seed
+	return gridSize, seed, iterations
+}
+
+func neighborsCornerTL(maxIndex int) (neighbors [8][2]int) {
+	return [8][2]int{
+		{maxIndex, 0},
+		{maxIndex, 1},
+		{0, 1},
+		{1, 1},
+		{1, 0},
+		{1, maxIndex},
+		{0, maxIndex},
+		{maxIndex, maxIndex},
+	}
+}
+
+func neighborsCornerTR(maxIndex int) (neighbors [8][2]int) {
+	return [8][2]int{
+		{maxIndex, maxIndex},
+		{maxIndex, 0},
+		{0, 0},
+		{1, 0},
+		{1, maxIndex},
+		{1, maxIndex - 1},
+		{0, maxIndex - 1},
+		{maxIndex, maxIndex - 1},
+	}
+}
+
+func neighborsCornerBR(maxIndex int) (neighbors [8][2]int) {
+	return [8][2]int{
+		{maxIndex - 1, maxIndex},
+		{maxIndex - 1, 0},
+		{maxIndex, 0},
+		{0, 0},
+		{0, maxIndex},
+		{0, maxIndex - 1},
+		{maxIndex, maxIndex - 1},
+		{maxIndex - 1, maxIndex - 1},
+	}
+}
+
+func neighborsCornerBL(maxIndex int) (neighbors [8][2]int) {
+	return [8][2]int{
+		{maxIndex - 1, 0},
+		{maxIndex - 1, 1},
+		{maxIndex, 1},
+		{0, 1},
+		{0, 0},
+		{0, maxIndex},
+		{maxIndex, maxIndex},
+		{maxIndex - 1, maxIndex},
+	}
+}
+
+func neighborsEdgeT(row, column, maxIndex int) (neighbors [8][2]int) {
+	return [8][2]int{
+		{maxIndex, column},
+		{maxIndex, column + 1},
+		{row, column + 1},
+		{row + 1, column + 1},
+		{row + 1, column},
+		{row + 1, column - 1},
+		{row, column - 1},
+		{maxIndex, column - 1},
+	}
+}
+
+func neighborsEdgeR(row, column int) (neighbors [8][2]int) {
+	return [8][2]int{
+		{row - 1, column},
+		{row - 1, 0},
+		{row, 0},
+		{row + 1, 0},
+		{row + 1, column},
+		{row + 1, column - 1},
+		{row, column - 1},
+		{row - 1, column - 1},
+	}
+}
+
+func neighborsEdgeB(row, column int) (neighbors [8][2]int) {
+	return [8][2]int{
+		{row - 1, column},
+		{row - 1, column + 1},
+		{row, column + 1},
+		{0, column + 1},
+		{0, column},
+		{0, column - 1},
+		{row, column - 1},
+		{row - 1, column - 1},
+	}
+}
+
+func neighborsEdgeL(row, column, maxIndex int) (neighbors [8][2]int) {
+	return [8][2]int{
+		{row - 1, column},
+		{row - 1, column + 1},
+		{row, column + 1},
+		{row + 1, column + 1},
+		{row + 1, column},
+		{row + 1, maxIndex},
+		{row, maxIndex},
+		{row - 1, maxIndex},
+	}
+}
+
+func neighborsCenter(row, column int) (neighbors [8][2]int) {
+	return [8][2]int{
+		{row - 1, column},
+		{row - 1, column + 1},
+		{row, column + 1},
+		{row + 1, column + 1},
+		{row + 1, column},
+		{row + 1, column - 1},
+		{row, column - 1},
+		{row - 1, column - 1},
+	}
 }
