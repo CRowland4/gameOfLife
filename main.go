@@ -3,22 +3,26 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"time"
 )
 
 type cell struct {
 	state int
 }
 
+const iterations int = 1000
+
 func main() {
-	gridSize, seed, iterations := getStart()
-	rand.Seed(int64(seed))
+	gridSize := getStart()
 
 	grid := createGrid(gridSize)
 	for i := 0; i < iterations; i++ {
+		printGrid(i, grid)
 		grid = iterateGrid(grid)
+		time.Sleep(200 * time.Millisecond)
+		fmt.Print("\033[H\033[2J")
 	}
 
-	printGrid(grid)
 	return
 }
 
@@ -85,7 +89,10 @@ func getCellNeighborsCoordinates(row, column, maxIndex int) (neighbors [8][2]int
 	return neighborsCenter(row, column)
 }
 
-func printGrid(grid [][]cell) {
+func printGrid(count int, grid [][]cell) {
+	fmt.Printf("Generation #%d\n", count)
+	fmt.Printf("Alive: %d\n", getAliveCount(grid))
+
 	for _, row := range grid {
 		for _, cell_ := range row {
 			if cell_.state == 0 {
@@ -98,6 +105,16 @@ func printGrid(grid [][]cell) {
 	}
 }
 
+func getAliveCount(grid [][]cell) (aliveCount int) {
+	for i := 0; i < len(grid[0]); i++ {
+		for j := 0; j < len(grid[0]); j++ {
+			aliveCount += grid[i][j].state
+		}
+	}
+
+	return aliveCount
+}
+
 func createGrid(gridSize int) (grid [][]cell) {
 	for i := 0; i < gridSize; i++ {
 		grid = append(grid, []cell{})
@@ -108,11 +125,10 @@ func createGrid(gridSize int) (grid [][]cell) {
 	return grid
 }
 
-func getStart() (gridSize, seed, iterations int) {
-	fmt.Scanf("%d %d %d", &gridSize, &seed, &iterations)
-	// fmt.Scanln() to consume whitespace
+func getStart() (gridSize int) {
+	fmt.Scanf("%d", &gridSize)
 
-	return gridSize, seed, iterations
+	return gridSize
 }
 
 func neighborsCornerTL(maxIndex int) (neighbors [8][2]int) {
