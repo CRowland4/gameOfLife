@@ -19,7 +19,7 @@ func main() {
 	for i := 0; i < iterations; i++ {
 		printGrid(i, grid)
 		grid = iterateGrid(grid)
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(400 * time.Millisecond)
 		fmt.Print("\033[H\033[2J")
 	}
 
@@ -90,7 +90,7 @@ func getCellNeighborsCoordinates(row, column, maxIndex int) (neighbors [8][2]int
 }
 
 func printGrid(count int, grid [][]cell) {
-	fmt.Printf("Generation #%d\n", count)
+	fmt.Printf("\n\nGeneration #%d\n", count)
 	fmt.Printf("Alive: %d\n", getAliveCount(grid))
 
 	for _, row := range grid {
@@ -126,6 +126,7 @@ func createGrid(gridSize int) (grid [][]cell) {
 }
 
 func getStart() (gridSize int) {
+	fmt.Println("Enter the size of the grid you would like to observe:")
 	fmt.Scanf("%d", &gridSize)
 
 	return gridSize
